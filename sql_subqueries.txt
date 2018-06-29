@@ -6,13 +6,13 @@ SELECT AVG(standard_qty) as avg_std_qty,
        SUM(total_amt_usd) as tot_spent
 FROM orders
 WHERE DATE_TRUNC('month', occurred_at) = 
-	 (SELECT DATE_TRUNC('month', MIN(occurred_at)) 		  	  FROM orders) 
+	 (SELECT DATE_TRUNC('month', MIN(occurred_at)) FROM orders) 
 
 2. Provide the name of the sales_rep in each region with the largest amount of total_amt_usd sales.
 
 
 SELECT t3.rep, t3.region, t3.tot_sales
-FROM (  SELECT s.name rep, r.name region, 				     	SUM(o.total_amt_usd) tot_sales
+FROM (  SELECT s.name rep, r.name region, SUM(o.total_amt_usd) tot_sales
 	FROM orders o
 	JOIN accounts a
 		ON a.id = o.account_id
@@ -24,7 +24,7 @@ FROM (  SELECT s.name rep, r.name region, 				     	SUM(o.total_amt_usd) tot_sal
       	ORDER BY region, tot_sales DESC) t3
 
 JOIN (  SELECT region, Max(tot_sales) max_tot
-		FROM (SELECT s.name rep, r.name region, 					SUM(o.total_amt_usd) tot_sales
+		FROM (SELECT s.name rep, r.name region, SUM(o.total_amt_usd) tot_sales
 		      FROM orders o
 		      JOIN accounts a
 				ON a.id = o.account_id
@@ -42,37 +42,35 @@ ORDER BY t3.tot_sales DESC
 
 Alternative way:
 
-SELECT s.name rep, r.name region, 		                  SUM(total_amt_usd) tot
-		FROM orders o
-		JOIN accounts a
-			ON o.account_id = a.id
-		JOIN sales_reps s
-			ON s.id = a.sales_rep_id
-		JOIN region r
-			ON s.region_id = r.id
-		
-        GROUP BY rep,region
+SELECT s.name rep, r.name region, SUM(total_amt_usd) tot
+FROM orders o
+JOIN accounts a
+	ON o.account_id = a.id
+JOIN sales_reps s
+	ON s.id = a.sales_rep_id
+JOIN region r
+	ON s.region_id = r.id
+GROUP BY rep,region
 HAVING  SUM(total_amt_usd) IN (	SELECT MAX(tot) max_tot
- 				FROM ( SELECT s.name rep, 					  r.name region,               				SUM(total_amt_usd) tot
+ 				FROM ( SELECT s.name rep, r.name region, SUM(total_amt_usd) tot
 					FROM orders o
 					JOIN accounts a
-					ON o.account_id = a.id
+						ON o.account_id = a.id
 					JOIN sales_reps s
-					ON s.id = 								a.sales_rep_id
+						ON s.id = a.sales_rep_id
 					JOIN region r
-					ON s.region_id = r.id
+						ON s.region_id = r.id
 					GROUP BY rep,region
-					ORDER BY region, tot 				     DESC) as t1 
- 				GROUP BY t1.region
-			        ) 
+					ORDER BY region, tot DESC) as t1 
+ 					GROUP BY t1.region
+			             ) 
 ORDER BY tot DESC
 
 
 3. For the region with the largest (sum) of sales total_amt_usd, how many total (count) orders were placed? 
 
 SELECT t2.region, t2.num_orders, t2.tot_sales
-FROM (SELECT r.name region, SUM(o.total_amt_usd) tot_sales,
-          		COUNT(*) num_orders
+FROM (SELECT r.name region, SUM(o.total_amt_usd) tot_sales, COUNT(*) num_orders
       FROM orders o
       JOIN accounts a
 	ON a.id = o.account_id
@@ -108,8 +106,7 @@ JOIN orders o
 GROUP BY account
 
 HAVING SUM(total) > (SELECT t1.total
-		  	FROM	(SELECT a.name account, 		                       		SUM(standard_qty) 					tot_std,
-                      	   		SUM(total) total   
+		  	FROM	(SELECT a.name account, SUM(standard_qty) tot_std, SUM(total) total   
 				  FROM accounts a
 				  JOIN orders o
 				  ON a.id = o.account_id
@@ -125,7 +122,7 @@ FROM accounts a
 JOIN web_events w
 ON a.id = w.account_id
 WHERE a.name LIKE (SELECT t1.account
-FROM ( SELECT a.name account, SUM(total_amt_usd) 	             tot_usd
+FROM ( SELECT a.name account, SUM(total_amt_usd) tot_usd
 		FROM accounts a
 		JOIN orders o
 			ON a.id = o.account_id
@@ -138,7 +135,7 @@ ORDER BY account, events DESC
 6.What is the lifetime average amount spent in terms of total_amt_usd for the top 10 total spending accounts?
 
 SELECT AVG(t1.tot_spent)
-FROM ( SELECT a.id, a.name, SUM(o.total_amt_usd) 			tot_spent
+FROM ( SELECT a.id, a.name, SUM(o.total_amt_usd) tot_spent
 		FROM orders o
 		JOIN accounts a
 		ON a.id = o.account_id
