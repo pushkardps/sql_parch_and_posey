@@ -1,0 +1,98 @@
+LEFT & RIGHT
+
+1.In the accounts table, there is a column holding the website for each company. The last three digits specify what type of web address they are using. A list of extensions (and pricing) is provided here. Pull these extensions and provide how many of each website type exist in the accounts table.
+
+SELECT RIGHT(a.website, 4) as web_add, COUNT(*) cnt
+FROM accounts a
+GROUP BY 1
+             
+
+2.There is much debate about how much the name (or even the first letter of a company name) matters. Use the accounts table to pull the first letter of each company name to see the distribution of company names that begin with each letter (or number). 
+
+SELECT LEFT(a.name,1) letter, COUNT(*) cnt
+FROM accounts a
+GROUP BY first_letter
+ORDER BY 2 DESC
+
+
+3.Use the accounts table and a CASE statement to create two groups: one group of company names that start with a number and a second group of those company names that start with a letter. What proportion of company names start with a letter?
+
+SELECT CASE
+WHEN LEFT(a.name, 1) IN ('0','1','2','3','4','5','6','7','8','9') THEN 'number'
+ELSE 'letter' 
+END as first_char,
+COUNT(*) cnt
+FROM accounts a
+GROUP BY first_char
+
+
+4.Consider vowels as a, e, i, o, and u. What proportion of company names start with a vowel, and what percent start with anything else?
+
+SELECT SUM(vowels) vowels, SUM(other) other
+FROM (SELECT name, CASE WHEN LEFT(UPPER(name), 1) IN ('A','E','I','O','U') 
+                        THEN 1 ELSE 0 END AS vowels, 
+          CASE WHEN LEFT(UPPER(name), 1) IN ('A','E','I','O','U') 
+                       THEN 0 ELSE 1 END AS other
+         FROM accounts) t1;
+
+POSITION, LENGTH
+
+5. Use the accounts table to create first and last name columns that hold the first and last names for the primary_poc. 
+
+SELECT primary_poc, 
+LEFT(primary_poc, POSITION(' ' IN primary_poc)  - 1) as FIRST, RIGHT(primary_poc, LENGTH(primary_poc) - POSITION(' ' IN primary_poc)) as LAST
+
+FROM accounts a
+
+CONCAT
+
+6.Each company in the accounts table wants to create an email address for each primary_poc. The email address should be the first name of the primary_poc . last name primary_poc @ company name .com.
+
+SELECT
+LOWER(regexp_replace(primary_poc, ' ', '.')) ||
+ '@'||
+LOWER(regexp_replace(name, ' ', '')) ||
+'.com' as email_id
+FROM accounts 
+
+7.We would also like to create an initial password, which they will change after their first log in. The first password will be the first letter of the primary_poc's first name (lowercase), then the last letter of their first name (lowercase), the first letter of their last name (lowercase), the last letter of their last name (lowercase), the number of letters in their first name, the number of letters in their last name, and then the name of the company they are working with, all capitalized with no spaces.
+
+WITH t3 as (SELECT id,primary_poc, name,
+	LOWER(regexp_replace(primary_poc, ' ', '.')) ||
+ 	'@'||
+	LOWER(regexp_replace(name, ' ', '')) ||
+	'.com' as email_id
+FROM accounts)
+
+,
+t1 as ( SELECT id,primary_poc, name, email_id, LOWER(split_part(primary_poc, ' ', 1)) as first, LOWER(split_part(primary_poc, ' ', 2)) as last
+			FROM t3) 
+,
+t2 as ( SELECT id, email_id,
+       LEFT(t1.first,1) ||
+       RIGHT(t1.first,1) ||
+       LEFT(t1.last,1) ||
+       RIGHT(t1.last,1) ||
+       length(t1.first) ||
+       length(t1.last) ||
+       UPPER(regexp_replace(name, ' ', ''))as pwd   
+       FROM t1)
+                                                                                                 
+SELECT * FROM t2
+
+CAST -
+
+SELECT date orig_date, (SUBSTR(date, 7, 4) || '-' || LEFT(date, 2) || '-' || SUBSTR(date, 4, 2))::DATE new_date
+FROM sf_crime_data;
+
+COALESCE -
+
+SELECT COALESCE(a.id, a.id) filled_id, a.name, a.website, a.lat, a.long, a.primary_poc, a.sales_rep_id, COALESCE(o.account_id, a.id) account_id, o.occurred_at, COALESCE(o.standard_qty, 0) standard_qty, COALESCE(o.gloss_qty,0) gloss_qty, COALESCE(o.poster_qty,0) poster_qty, COALESCE(o.total,0) total, COALESCE(o.standard_amt_usd,0) standard_amt_usd, COALESCE(o.gloss_amt_usd,0) gloss_amt_usd, COALESCE(o.poster_amt_usd,0) poster_amt_usd, COALESCE(o.total_amt_usd,0) total_amt_usd
+FROM accounts a
+LEFT JOIN orders o
+ON a.id = o.account_id
+WHERE o.total IS NULL
+
+
+
+            
