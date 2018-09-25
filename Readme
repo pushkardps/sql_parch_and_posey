@@ -1,3 +1,7 @@
-Parch & Posey database contains information about a hypothetical paper retailer. The company has 50 sales reps spread across the United States in 4 regions. It sells 3 types of paper products - Regular, Poster and Glossy. Most of the clients' are Fortune 100 companies. This repository contains sql scripts to gather insights on various aspects of the company.
+Parch & Posey database contains information about a hypothetical paper retailer. 
+The company has 50 sales reps spread across the United States in 4 regions. 
+It sells 3 types of paper products - Regular, Poster and Glossy. 
+Most of the clients' are Fortune 100 companies. 
+This repository contains sql scripts to gather insights on various aspects of the company.
 
 An ERD is provided to show how the information is stored in the form of tables in the database.
